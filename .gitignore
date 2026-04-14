@@ -1,2 +1,6 @@
 .env
 .DS_Store
+
+# Local MySQL runtime/data artifacts
+.local-mysql/data/
+.local-mysql/run/
