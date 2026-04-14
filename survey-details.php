@@ -86,9 +86,16 @@ require_once __DIR__ . '/templates/header.php';
     <p class="meta-item"><span class="meta-label">Created:</span> <?= e(date('M j, Y', strtotime($survey['created_at']))) ?></p>
   </div>
 
+  <?php if (!$canComplete && !$isOwner && !$alreadyCompleted): ?>
+    <p class="notice">You can answer this survey once it is active and open for responses.</p>
+  <?php endif; ?>
+
   <?php if ($isNativeSurvey): ?>
     <section class="section card card-pad">
-      <h2 class="card-title">Answer Survey</h2>
+      <div class="card-head">
+        <h2 class="card-title">Answer Survey</h2>
+        <span class="survey-question-count"><?= e((string) count($nativeQuestions)) ?> question(s)</span>
+      </div>
 
       <?php if ($nativeQuestions === []): ?>
         <p class="muted">This survey has no configured questions.</p>
@@ -102,15 +109,15 @@ require_once __DIR__ . '/templates/header.php';
             $questionType = (string) ($question['type'] ?? native_question_type_short_text());
             $questionOptions = $question['options'] ?? [];
             ?>
-            <div class="field">
+            <div class="field survey-question-card">
               <label class="field-label">
-                <?= e((string) ($question['title'] ?? ('Question ' . ($index + 1)))) ?>
+                Q<?= e((string) ($index + 1)) ?>. <?= e((string) ($question['title'] ?? ('Question ' . ($index + 1)))) ?>
               </label>
 
               <?php if ($questionType === native_question_type_multiple_choice() && is_array($questionOptions) && $questionOptions !== []): ?>
-                <div class="form-grid">
+                <div class="form-grid survey-option-list">
                   <?php foreach ($questionOptions as $optionIndex => $optionText): ?>
-                    <label for="answer_<?= e((string) $index) ?>_<?= e((string) $optionIndex) ?>" class="muted">
+                    <label for="answer_<?= e((string) $index) ?>_<?= e((string) $optionIndex) ?>" class="survey-option-row">
                       <input
                         id="answer_<?= e((string) $index) ?>_<?= e((string) $optionIndex) ?>"
                         name="answers[<?= e((string) $index) ?>]"
@@ -138,6 +145,10 @@ require_once __DIR__ . '/templates/header.php';
           <div class="actions-row">
             <button type="submit" class="btn btn-success" <?= $canComplete ? '' : 'disabled' ?>>Submit Answers</button>
           </div>
+
+          <?php if ($canComplete): ?>
+            <p class="muted small">You can submit only once for this survey. Make sure your answers are final.</p>
+          <?php endif; ?>
         </form>
       <?php endif; ?>
     </section>

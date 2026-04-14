@@ -10,6 +10,7 @@ $pdo = db();
 
 $stmt = $pdo->prepare(
     "SELECT s.id, s.title, s.category, s.estimated_minutes, s.reward_points, s.created_at,
+            s.source_type, s.target_completions, s.current_completions,
             s.user_id, u.name AS posted_by,
             EXISTS(
               SELECT 1
@@ -27,6 +28,20 @@ $stmt->execute([
 ]);
 $surveys = $stmt->fetchAll();
 
+$totalSurveys = count($surveys);
+$completedByViewer = 0;
+$nativeCount = 0;
+
+foreach ($surveys as $surveyItem) {
+    if ((bool) ($surveyItem['already_completed'] ?? false)) {
+        $completedByViewer++;
+    }
+
+    if ((string) ($surveyItem['source_type'] ?? survey_source_type_legacy()) === survey_source_type_native()) {
+        $nativeCount++;
+    }
+}
+
 $pageTitle = 'Browse Surveys';
 require_once __DIR__ . '/templates/header.php';
 ?>
@@ -35,16 +50,40 @@ require_once __DIR__ . '/templates/header.php';
   <p class="page-subtitle">Newest published surveys first. Browse and complete to earn points.</p>
 </section>
 
+<section class="section records-kpis">
+  <span class="records-kpi">Open surveys: <?= e((string) $totalSurveys) ?></span>
+  <span class="records-kpi records-kpi-approved">Completed by you: <?= e((string) $completedByViewer) ?></span>
+  <span class="records-kpi">Native surveys: <?= e((string) $nativeCount) ?></span>
+</section>
+
 <?php if (!$surveys): ?>
   <section class="section card card-pad">
     <p class="muted">No published surveys available right now.</p>
   </section>
 <?php else: ?>
+  <section class="section card card-pad survey-toolbar">
+    <div class="field">
+      <label class="field-label" for="survey-search">Search surveys</label>
+      <input id="survey-search" type="search" class="input" placeholder="Search by title, category, or author" autocomplete="off">
+    </div>
+    <p class="muted small" id="survey-search-count">Showing <?= e((string) $totalSurveys) ?> of <?= e((string) $totalSurveys) ?> surveys</p>
+  </section>
+
   <section class="section survey-feed" aria-label="Survey results feed">
     <?php foreach ($surveys as $survey): ?>
       <?php $timeText = $survey['estimated_minutes'] !== null ? e((string) $survey['estimated_minutes']) . ' min' : 'Not specified'; ?>
       <?php $postedDate = date('M j, Y', strtotime((string) $survey['created_at'])); ?>
-      <article class="survey-feed-item<?= (bool) $survey['already_completed'] ? ' is-completed' : '' ?>">
+      <?php
+      $isNative = (string) ($survey['source_type'] ?? survey_source_type_legacy()) === survey_source_type_native();
+      $targetCompletions = max(1, (int) ($survey['target_completions'] ?? 0));
+      $currentCompletions = max(0, (int) ($survey['current_completions'] ?? 0));
+      $progressPercent = min(100, (int) floor(($currentCompletions / $targetCompletions) * 100));
+      ?>
+      <article
+        class="survey-feed-item<?= (bool) $survey['already_completed'] ? ' is-completed' : '' ?>"
+        data-survey-card
+        data-search-text="<?= e(strtolower(trim($survey['title'] . ' ' . $survey['category'] . ' ' . $survey['posted_by']))) ?>"
+      >
         <div class="survey-feed-rail" aria-hidden="true">
           <span class="survey-feed-score">+<?= e((string) $survey['reward_points']) ?></span>
           <span class="survey-feed-score-label">pts</span>
@@ -66,13 +105,58 @@ require_once __DIR__ . '/templates/header.php';
           <div class="survey-feed-tags">
             <span class="survey-feed-tag">Time: <?= $timeText ?></span>
             <span class="survey-feed-tag">Reward: +<?= e((string) $survey['reward_points']) ?> point(s)</span>
+            <span class="survey-feed-tag"><?= $isNative ? 'Native' : 'Legacy' ?></span>
             <?php if ((bool) $survey['already_completed']): ?>
               <span class="survey-feed-tag survey-feed-tag-completed">Completed</span>
             <?php endif; ?>
+          </div>
+
+          <div class="survey-feed-progress" aria-label="Completion progress">
+            <div class="survey-feed-progress-track">
+              <span class="survey-feed-progress-bar" style="width: <?= e((string) $progressPercent) ?>%"></span>
+            </div>
+            <p class="survey-feed-progress-text"><?= e((string) $currentCompletions) ?> / <?= e((string) $targetCompletions) ?> completed</p>
+          </div>
+
+          <div class="actions-row survey-feed-actions">
+            <a href="<?= e(url('/survey-details.php?id=' . $survey['id'])) ?>" class="btn btn-primary btn-small">
+              <?= (bool) $survey['already_completed'] ? 'View Survey' : 'Answer Survey' ?>
+            </a>
           </div>
         </div>
       </article>
     <?php endforeach; ?>
   </section>
+
+  <script>
+    (function () {
+      var searchInput = document.getElementById('survey-search');
+      var countEl = document.getElementById('survey-search-count');
+      var cards = Array.prototype.slice.call(document.querySelectorAll('[data-survey-card]'));
+
+      if (!searchInput || !countEl || cards.length === 0) {
+        return;
+      }
+
+      function updateFilter() {
+        var keyword = searchInput.value.trim().toLowerCase();
+        var visibleCount = 0;
+
+        cards.forEach(function (card) {
+          var haystack = (card.getAttribute('data-search-text') || '').toLowerCase();
+          var visible = keyword === '' || haystack.indexOf(keyword) !== -1;
+          card.hidden = !visible;
+          if (visible) {
+            visibleCount += 1;
+          }
+        });
+
+        countEl.textContent = 'Showing ' + String(visibleCount) + ' of ' + String(cards.length) + ' surveys';
+      }
+
+      searchInput.addEventListener('input', updateFilter);
+      updateFilter();
+    })();
+  </script>
 <?php endif; ?>
 <?php require_once __DIR__ . '/templates/footer.php'; ?>

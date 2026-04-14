@@ -1313,6 +1313,11 @@ a {
   gap: 0.55rem;
 }
 
+.survey-toolbar {
+  display: grid;
+  gap: 0.35rem;
+}
+
 .survey-feed-item {
   display: grid;
   grid-template-columns: 3rem minmax(0, 1fr);
@@ -1424,6 +1429,73 @@ a {
   border-color: #9ae6b4;
   background: #e9fbea;
   color: #22663a;
+}
+
+.survey-feed-progress {
+  margin-top: 0.5rem;
+}
+
+.survey-feed-progress-track {
+  width: 100%;
+  height: 0.46rem;
+  border-radius: 999px;
+  background: #deeaef;
+  overflow: hidden;
+}
+
+.survey-feed-progress-bar {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #1b9ac2 0%, #2f9e58 100%);
+}
+
+.survey-feed-progress-text {
+  margin: 0.2rem 0 0;
+  font-size: 0.75rem;
+  color: #415562;
+}
+
+.survey-feed-actions {
+  margin-top: 0.48rem;
+}
+
+.survey-question-count {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #c4d6de;
+  border-radius: 999px;
+  padding: 0.2rem 0.52rem;
+  font-size: 0.75rem;
+  color: #36515e;
+  background: #eef6f8;
+  font-weight: 700;
+}
+
+.survey-question-card {
+  border: 1px solid #cedbe0;
+  border-radius: 0.72rem;
+  padding: 0.74rem;
+  background: #f8fbfc;
+}
+
+.survey-option-list {
+  gap: 0.42rem;
+}
+
+.survey-option-row {
+  display: flex;
+  align-items: center;
+  gap: 0.46rem;
+  border: 1px solid #d4e0e5;
+  border-radius: 0.62rem;
+  padding: 0.44rem 0.5rem;
+  background: #ffffff;
+  color: #1f2937;
+}
+
+.survey-option-row:hover {
+  border-color: #9fc1ce;
+  background: #f4fafc;
 }
 
 .records-shell {
