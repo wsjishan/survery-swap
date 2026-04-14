@@ -56,7 +56,7 @@ require_once __DIR__ . '/templates/header.php';
     <div class="landing-hero-content">
       <p class="landing-kicker">Survey Exchange For Students And Researchers</p>
       <h1 class="landing-title">Get quality survey responses faster with a points-based swap.</h1>
-      <p class="landing-copy">Complete published surveys to earn points, then spend those points to publish your own Google Form link. No complex verification, and designed for real academic timelines.</p>
+      <p class="landing-copy">Complete published surveys to earn points, then spend those points to publish your own in-app survey. No complex verification, and designed for real academic timelines.</p>
 
       <ul class="landing-benefits" aria-label="Key SurveySwap benefits">
         <li class="landing-benefit-item">
@@ -65,7 +65,7 @@ require_once __DIR__ . '/templates/header.php';
         </li>
         <li class="landing-benefit-item">
           <span class="landing-benefit-icon" aria-hidden="true">2</span>
-          Spend 1 point to publish your own Google Form
+          Spend 1 point to publish your own survey
         </li>
         <li class="landing-benefit-item">
           <span class="landing-benefit-icon" aria-hidden="true">3</span>
@@ -113,7 +113,7 @@ require_once __DIR__ . '/templates/header.php';
     <article class="landing-step">
       <p class="landing-step-number">01</p>
       <h3 class="landing-step-title">Complete Surveys</h3>
-      <p class="landing-step-copy">Open a survey, respond in Google Forms, then return and mark it completed.</p>
+      <p class="landing-step-copy">Open a survey, submit answers directly inside SurveySwap, and earn points instantly.</p>
     </article>
     <article class="landing-step">
       <p class="landing-step-number">02</p>
