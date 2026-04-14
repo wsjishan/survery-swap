@@ -17,7 +17,13 @@ $userId = (int) $user['id'];
 $title = trim((string) ($_POST['title'] ?? ''));
 $description = trim((string) ($_POST['description'] ?? ''));
 $rawQuestions = $_POST['questions'] ?? [];
-$nativeQuestions = normalize_native_survey_questions(is_array($rawQuestions) ? $rawQuestions : []);
+$rawQuestionTypes = $_POST['question_types'] ?? [];
+$rawQuestionOptions = $_POST['question_options'] ?? [];
+$nativeQuestions = normalize_native_survey_questions(
+    is_array($rawQuestions) ? $rawQuestions : [],
+    is_array($rawQuestionTypes) ? $rawQuestionTypes : [],
+    is_array($rawQuestionOptions) ? $rawQuestionOptions : []
+);
 $category = trim((string) ($_POST['category'] ?? ''));
 $targetAudience = trim((string) ($_POST['target_audience'] ?? 'General'));
 $estimatedMinutesRaw = trim((string) ($_POST['estimated_minutes'] ?? ''));
@@ -97,10 +103,9 @@ if ($errors) {
     set_old_input([
         'title' => $title,
         'description' => $description,
-        'questions' => array_map(
-            static fn (array $question): string => (string) ($question['title'] ?? ''),
-            $nativeQuestions
-        ),
+        'questions' => is_array($rawQuestions) ? $rawQuestions : [],
+        'question_types' => is_array($rawQuestionTypes) ? $rawQuestionTypes : [],
+        'question_options' => is_array($rawQuestionOptions) ? $rawQuestionOptions : [],
         'category' => $category,
         'target_audience' => $targetAudience,
         'estimated_minutes' => $estimatedMinutesRaw,
@@ -202,10 +207,9 @@ try {
     set_old_input([
         'title' => $title,
         'description' => $description,
-        'questions' => array_map(
-            static fn (array $question): string => (string) ($question['title'] ?? ''),
-            $nativeQuestions
-        ),
+        'questions' => is_array($rawQuestions) ? $rawQuestions : [],
+        'question_types' => is_array($rawQuestionTypes) ? $rawQuestionTypes : [],
+        'question_options' => is_array($rawQuestionOptions) ? $rawQuestionOptions : [],
         'category' => $category,
         'target_audience' => $targetAudience,
         'estimated_minutes' => $estimatedMinutesRaw,

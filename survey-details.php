@@ -98,18 +98,40 @@ require_once __DIR__ . '/templates/header.php';
           <input type="hidden" name="survey_id" value="<?= e((string) $survey['id']) ?>">
 
           <?php foreach ($nativeQuestions as $index => $question): ?>
+            <?php
+            $questionType = (string) ($question['type'] ?? native_question_type_short_text());
+            $questionOptions = $question['options'] ?? [];
+            ?>
             <div class="field">
-              <label class="field-label" for="answer_<?= e((string) $index) ?>">
+              <label class="field-label">
                 <?= e((string) ($question['title'] ?? ('Question ' . ($index + 1)))) ?>
               </label>
-              <input
-                id="answer_<?= e((string) $index) ?>"
-                name="answers[]"
-                type="text"
-                class="input"
-                maxlength="2000"
-                <?= $canComplete ? 'required' : 'disabled' ?>
-              >
+
+              <?php if ($questionType === native_question_type_multiple_choice() && is_array($questionOptions) && $questionOptions !== []): ?>
+                <div class="form-grid">
+                  <?php foreach ($questionOptions as $optionIndex => $optionText): ?>
+                    <label for="answer_<?= e((string) $index) ?>_<?= e((string) $optionIndex) ?>" class="muted">
+                      <input
+                        id="answer_<?= e((string) $index) ?>_<?= e((string) $optionIndex) ?>"
+                        name="answers[<?= e((string) $index) ?>]"
+                        type="radio"
+                        value="<?= e((string) $optionText) ?>"
+                        <?= $canComplete ? 'required' : 'disabled' ?>
+                      >
+                      <?= e((string) $optionText) ?>
+                    </label>
+                  <?php endforeach; ?>
+                </div>
+              <?php else: ?>
+                <input
+                  id="answer_<?= e((string) $index) ?>"
+                  name="answers[<?= e((string) $index) ?>]"
+                  type="text"
+                  class="input"
+                  maxlength="2000"
+                  <?= $canComplete ? 'required' : 'disabled' ?>
+                >
+              <?php endif; ?>
             </div>
           <?php endforeach; ?>
 

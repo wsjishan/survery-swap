@@ -10,6 +10,8 @@ $errors = pull_validation_errors();
 $categories = survey_categories();
 $rewardTiers = survey_reward_tiers();
 $oldQuestions = $_SESSION['_old']['questions'] ?? [''];
+$oldQuestionTypes = $_SESSION['_old']['question_types'] ?? [];
+$oldQuestionOptions = $_SESSION['_old']['question_options'] ?? [];
 
 if (!is_array($oldQuestions) || $oldQuestions === []) {
   $oldQuestions = [''];
@@ -39,12 +41,12 @@ require_once __DIR__ . '/templates/header.php';
 ?>
 <section class="section page-head">
   <h1 class="page-title">Submit a New Survey</h1>
-  <p class="page-subtitle">Create an in-app survey with short-text questions and run a reward-based response campaign.</p>
+  <p class="page-subtitle">Create an in-app survey with short-text and multiple-choice questions, then run a reward-based response campaign.</p>
 </section>
 
 <section class="section card card-pad">
   <p class="notice">Total budget is deducted at publish time: listing fee + (reward points x target completions).</p>
-  <p class="notice">V1 supports short-text questions only. All new surveys are native and answered inside SurveySwap.</p>
+  <p class="notice">V1 supports short-text and multiple-choice questions. All new surveys are native and answered inside SurveySwap.</p>
 
   <?php if (!$canSubmit): ?>
     <p class="flash flash-warning">Insufficient points for this configuration. Adjust reward/target or earn more points first.</p>
@@ -66,14 +68,29 @@ require_once __DIR__ . '/templates/header.php';
     </div>
 
     <div class="field">
-      <label class="field-label">Survey Questions (Short Text)</label>
+      <label class="field-label">Survey Questions</label>
       <div id="question-builder" class="form-grid">
         <?php foreach ($oldQuestions as $index => $questionText): ?>
+          <?php
+          $questionType = (string) ($oldQuestionTypes[$index] ?? native_question_type_short_text());
+          if (!in_array($questionType, native_question_type_options(), true)) {
+              $questionType = native_question_type_short_text();
+          }
+          $questionOptions = (string) ($oldQuestionOptions[$index] ?? '');
+          ?>
           <div class="field question-row">
             <label class="field-label" for="question_<?= e((string) $index) ?>">Question <?= e((string) ($index + 1)) ?></label>
             <div class="actions-row">
               <input id="question_<?= e((string) $index) ?>" name="questions[]" type="text" class="input <?= isset($errors['questions']) ? 'is-invalid' : '' ?>" value="<?= e((string) $questionText) ?>" maxlength="240" required>
+              <select name="question_types[]" class="select question-type">
+                <option value="<?= e(native_question_type_short_text()) ?>" <?= $questionType === native_question_type_short_text() ? 'selected' : '' ?>>Short text</option>
+                <option value="<?= e(native_question_type_multiple_choice()) ?>" <?= $questionType === native_question_type_multiple_choice() ? 'selected' : '' ?>>Multiple choice</option>
+              </select>
               <button type="button" class="btn btn-ghost btn-small question-remove">Remove</button>
+            </div>
+            <div class="field question-options-wrap" <?= $questionType === native_question_type_multiple_choice() ? '' : 'hidden' ?>>
+              <label class="field-label">Options (one per line)</label>
+              <textarea name="question_options[]" class="textarea question-options" rows="4" placeholder="Option A&#10;Option B&#10;Option C"><?= e($questionOptions) ?></textarea>
             </div>
           </div>
         <?php endforeach; ?>
@@ -209,6 +226,16 @@ require_once __DIR__ . '/templates/header.php';
         if (label && input) {
           label.setAttribute('for', input.id);
         }
+
+        var optionsWrap = row.querySelector('.question-options-wrap');
+        var typeSelect = row.querySelector('.question-type');
+
+        if (!optionsWrap || !typeSelect) {
+          return;
+        }
+
+        var isMultipleChoice = typeSelect.value === '<?= native_question_type_multiple_choice() ?>';
+        optionsWrap.hidden = !isMultipleChoice;
       });
     }
 
@@ -224,7 +251,15 @@ require_once __DIR__ . '/templates/header.php';
         '<label class="field-label">Question</label>' +
         '<div class="actions-row">' +
           '<input name="questions[]" type="text" class="input" maxlength="240" required>' +
+          '<select name="question_types[]" class="select question-type">' +
+            '<option value="<?= native_question_type_short_text() ?>">Short text</option>' +
+            '<option value="<?= native_question_type_multiple_choice() ?>">Multiple choice</option>' +
+          '</select>' +
           '<button type="button" class="btn btn-ghost btn-small question-remove">Remove</button>' +
+        '</div>' +
+        '<div class="field question-options-wrap" hidden>' +
+          '<label class="field-label">Options (one per line)</label>' +
+          '<textarea name="question_options[]" class="textarea question-options" rows="4" placeholder="Option A&#10;Option B&#10;Option C"></textarea>' +
         '</div>';
 
       questionBuilder.appendChild(row);
@@ -247,6 +282,15 @@ require_once __DIR__ . '/templates/header.php';
         row.remove();
         relabelQuestions();
       }
+    });
+
+    questionBuilder.addEventListener('change', function (event) {
+      var target = event.target;
+      if (!(target instanceof HTMLElement) || !target.classList.contains('question-type')) {
+        return;
+      }
+
+      relabelQuestions();
     });
 
     relabelQuestions();

@@ -255,21 +255,70 @@ function native_survey_question_max(): int
     return 15;
 }
 
-function normalize_native_survey_questions(array $rawQuestions): array
+function native_question_type_short_text(): string
+{
+    return 'short_text';
+}
+
+function native_question_type_multiple_choice(): string
+{
+    return 'multiple_choice';
+}
+
+function native_question_type_options(): array
+{
+    return [
+        native_question_type_short_text(),
+        native_question_type_multiple_choice(),
+    ];
+}
+
+function normalize_multiple_choice_options(string $rawOptions): array
+{
+    $lines = preg_split('/\r\n|\r|\n/', $rawOptions) ?: [];
+    $options = [];
+
+    foreach ($lines as $line) {
+        $option = trim((string) $line);
+        if ($option === '') {
+            continue;
+        }
+
+        $options[] = substr($option, 0, 120);
+    }
+
+    $options = array_values(array_unique($options));
+
+    return array_slice($options, 0, 10);
+}
+
+function normalize_native_survey_questions(array $rawQuestions, array $rawQuestionTypes = [], array $rawQuestionOptions = []): array
 {
     $questions = [];
 
-    foreach ($rawQuestions as $rawQuestion) {
+    foreach ($rawQuestions as $index => $rawQuestion) {
         $text = trim((string) $rawQuestion);
         if ($text === '') {
             continue;
         }
 
-        $questions[] = [
-            'type' => 'short_text',
+        $type = trim((string) ($rawQuestionTypes[$index] ?? native_question_type_short_text()));
+        if (!in_array($type, native_question_type_options(), true)) {
+            $type = native_question_type_short_text();
+        }
+
+        $question = [
+            'type' => $type,
             'title' => substr($text, 0, 240),
             'required' => true,
         ];
+
+        if ($type === native_question_type_multiple_choice()) {
+            $options = normalize_multiple_choice_options((string) ($rawQuestionOptions[$index] ?? ''));
+            $question['options'] = $options;
+        }
+
+        $questions[] = $question;
     }
 
     return $questions;
@@ -290,6 +339,7 @@ function validate_native_survey_questions(array $questions): array
 
     foreach ($questions as $index => $question) {
         $title = trim((string) ($question['title'] ?? ''));
+        $type = trim((string) ($question['type'] ?? native_question_type_short_text()));
         if ($title === '') {
             $errors[] = sprintf('Question %d is required.', $index + 1);
             continue;
@@ -297,6 +347,40 @@ function validate_native_survey_questions(array $questions): array
 
         if (strlen($title) > 240) {
             $errors[] = sprintf('Question %d must be 240 characters or less.', $index + 1);
+        }
+
+        if (!in_array($type, native_question_type_options(), true)) {
+            $errors[] = sprintf('Question %d has an invalid type.', $index + 1);
+            continue;
+        }
+
+        if ($type === native_question_type_multiple_choice()) {
+            $options = $question['options'] ?? [];
+            if (!is_array($options)) {
+                $errors[] = sprintf('Question %d options are invalid.', $index + 1);
+                continue;
+            }
+
+            $normalizedOptions = [];
+            foreach ($options as $option) {
+                $optionText = trim((string) $option);
+                if ($optionText === '') {
+                    continue;
+                }
+                $normalizedOptions[] = substr($optionText, 0, 120);
+            }
+
+            $normalizedOptions = array_values(array_unique($normalizedOptions));
+
+            if (count($normalizedOptions) < 2) {
+                $errors[] = sprintf('Question %d needs at least 2 options.', $index + 1);
+                continue;
+            }
+
+            if (count($normalizedOptions) > 10) {
+                $errors[] = sprintf('Question %d can have up to 10 options.', $index + 1);
+                continue;
+            }
         }
     }
 

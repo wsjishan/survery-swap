@@ -109,6 +109,7 @@ try {
 
     foreach ($questions as $index => $question) {
         $prompt = trim((string) ($question['title'] ?? ''));
+        $questionType = trim((string) ($question['type'] ?? native_question_type_short_text()));
         $answer = trim((string) ($answersRaw[$index] ?? ''));
 
         if ($answer === '') {
@@ -117,8 +118,32 @@ try {
             redirect('/survey-details.php?id=' . $surveyId);
         }
 
+        if ($questionType === native_question_type_multiple_choice()) {
+            $options = $question['options'] ?? [];
+            if (!is_array($options) || $options === []) {
+                $pdo->rollBack();
+                set_flash('danger', sprintf('Question %d has invalid options.', $index + 1));
+                redirect('/survey-details.php?id=' . $surveyId);
+            }
+
+            $normalizedOptions = [];
+            foreach ($options as $option) {
+                $optionText = trim((string) $option);
+                if ($optionText !== '') {
+                    $normalizedOptions[] = $optionText;
+                }
+            }
+
+            if (!in_array($answer, $normalizedOptions, true)) {
+                $pdo->rollBack();
+                set_flash('warning', sprintf('Select a valid option for question %d.', $index + 1));
+                redirect('/survey-details.php?id=' . $surveyId);
+            }
+        }
+
         $normalizedAnswers[] = [
             'question_index' => $index,
+            'type' => $questionType,
             'question' => substr($prompt, 0, 240),
             'answer' => substr($answer, 0, 2000),
         ];
