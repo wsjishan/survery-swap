@@ -1,4 +1,4 @@
-# SurveySwap MVP (Phase 1 Foundation)
+# SurveySwap MVP
 
 SurveySwap is a point-based survey exchange platform for students and researchers.
 
