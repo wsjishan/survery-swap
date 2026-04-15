@@ -58,17 +58,17 @@ require_once __DIR__ . '/templates/header.php';
   <div class="landing-hero-layout">
     <div class="landing-hero-content">
       <p class="landing-kicker">Survey Exchange For Students And Researchers</p>
-      <h1 class="landing-title">Get quality survey responses faster with a points-based swap.</h1>
-      <p class="landing-copy">Complete published surveys to earn points, then spend those points to publish your own in-app survey. Reward tiers are 1 to 5 points, and publish cost is simply reward x <?= e((string) SURVEY_REWARD_COST_MULTIPLIER) ?>.</p>
+      <h1 class="landing-title">Get quality survey responses faster with a student-first exchange.</h1>
+      <p class="landing-copy">Join an active community of students and researchers, complete real surveys, and launch your own in-app survey with a simple, transparent system.</p>
 
       <ul class="landing-benefits" aria-label="Key SurveySwap benefits">
         <li class="landing-benefit-item">
           <span class="landing-benefit-icon" aria-hidden="true">1</span>
-          Complete surveys - earn +<?= e((string) $minRewardTier) ?> to +<?= e((string) $maxRewardTier) ?> points instantly
+          Complete real surveys and grow your research visibility faster
         </li>
         <li class="landing-benefit-item">
           <span class="landing-benefit-icon" aria-hidden="true">2</span>
-          Publish cost is fixed by reward: 1->2, 3->6, 5->10
+          Publish your own survey in minutes with clear participation rules
         </li>
         <li class="landing-benefit-item">
           <span class="landing-benefit-icon" aria-hidden="true">3</span>

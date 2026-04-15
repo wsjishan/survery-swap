@@ -1,6 +1,14 @@
 # SurveySwap MVP
 
-SurveySwap is a point-based survey exchange platform for students and researchers.
+SurveySwap is a student-first survey exchange platform for students and researchers. Complete real surveys from peers and launch your own, all within a transparent, fair participation system.
+
+## Features
+
+- Student/researcher-only survey exchange
+- Complete surveys to unlock the ability to publish your own
+- Transparent, fair participation system (see right card on landing page for point details)
+- Native in-app surveys and legacy Google Form support
+- Simple, modern UI (custom CSS, no Bootstrap)
 
 ## Tech
 
@@ -47,7 +55,7 @@ DB_PASS=your_strong_password
 ```
 
 6. Visit:
-   - `http://localhost/survery-swap/index.php`
+   - `http://localhost/survery-swap/index.php` (Landing page: exchange-focused, point details in right card)
 
 ## Demo Accounts
 
