@@ -10,7 +10,7 @@ $pdo = db();
 
 $stmt = $pdo->prepare(
     "SELECT s.id, s.title, s.category, s.estimated_minutes, s.reward_points, s.created_at,
-            s.source_type, s.target_completions, s.current_completions,
+            s.source_type,
             s.user_id, u.name AS posted_by,
             EXISTS(
               SELECT 1
@@ -75,9 +75,6 @@ require_once __DIR__ . '/templates/header.php';
       <?php $postedDate = date('M j, Y', strtotime((string) $survey['created_at'])); ?>
       <?php
       $isNative = (string) ($survey['source_type'] ?? survey_source_type_legacy()) === survey_source_type_native();
-      $targetCompletions = max(1, (int) ($survey['target_completions'] ?? 0));
-      $currentCompletions = max(0, (int) ($survey['current_completions'] ?? 0));
-      $progressPercent = min(100, (int) floor(($currentCompletions / $targetCompletions) * 100));
       ?>
       <article
         class="survey-feed-item<?= (bool) $survey['already_completed'] ? ' is-completed' : '' ?>"
@@ -109,13 +106,6 @@ require_once __DIR__ . '/templates/header.php';
             <?php if ((bool) $survey['already_completed']): ?>
               <span class="survey-feed-tag survey-feed-tag-completed">Completed</span>
             <?php endif; ?>
-          </div>
-
-          <div class="survey-feed-progress" aria-label="Completion progress">
-            <div class="survey-feed-progress-track">
-              <span class="survey-feed-progress-bar" style="width: <?= e((string) $progressPercent) ?>%"></span>
-            </div>
-            <p class="survey-feed-progress-text"><?= e((string) $currentCompletions) ?> / <?= e((string) $targetCompletions) ?> completed</p>
           </div>
 
           <div class="actions-row survey-feed-actions">

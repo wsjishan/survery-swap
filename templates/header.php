@@ -14,8 +14,7 @@ if ($user) {
         : '/surveys.php';
 }
 $currentPath = basename($_SERVER['PHP_SELF'] ?? '');
-$isAdminPath = str_contains((string) ($_SERVER['PHP_SELF'] ?? ''), '/admin/');
-$showHeader = !$isLandingMode && !$isAuthMode;
+$showHeader = !$isLandingMode;
 $bodyClass = trim(
     ($isLandingMode ? 'landing-mode ' : '')
     . ($isAuthMode ? 'auth-mode' : '')
@@ -68,12 +67,14 @@ $containerClass = $isLandingMode
           <a class="nav-link <?= $currentPath === 'submit-survey.php' ? 'active' : '' ?>" href="<?= e(url('/submit-survey.php')) ?>">Submit Survey</a>
           <a class="nav-link <?= $currentPath === 'my-surveys.php' ? 'active' : '' ?>" href="<?= e(url('/my-surveys.php')) ?>">My Surveys</a>
           <a class="nav-link <?= $currentPath === 'completed-surveys.php' ? 'active' : '' ?>" href="<?= e(url('/completed-surveys.php')) ?>">Completed</a>
-          <?php if (is_admin()): ?>
-            <a class="nav-link <?= $isAdminPath ? 'active' : '' ?>" href="<?= e(url('/admin/dashboard.php')) ?>">Admin</a>
-          <?php endif; ?>
+        <?php elseif ($isAuthMode): ?>
+          <a class="nav-link <?= $currentPath === 'index.php' ? 'active' : '' ?>" href="<?= e(url('/index.php')) ?>">Home</a>
+          <a class="nav-link" href="<?= e(url('/index.php#how-it-works')) ?>">How it Works</a>
+          <a class="nav-link <?= $currentPath === 'faq.php' ? 'active' : '' ?>" href="<?= e(url('/faq.php')) ?>">FAQ</a>
         <?php else: ?>
           <a class="nav-link <?= $currentPath === 'index.php' ? 'active' : '' ?>" href="<?= e(url('/index.php')) ?>">Home</a>
           <a class="nav-link <?= $currentPath === 'surveys.php' ? 'active' : '' ?>" href="<?= e(url('/surveys.php')) ?>">Browse Surveys</a>
+          <a class="nav-link <?= $currentPath === 'faq.php' ? 'active' : '' ?>" href="<?= e(url('/faq.php')) ?>">FAQ</a>
         <?php endif; ?>
       </nav>
 
@@ -88,6 +89,9 @@ $containerClass = $isLandingMode
             <?= csrf_field() ?>
             <button type="submit" class="btn btn-ghost btn-small nav-logout">Logout</button>
           </form>
+        <?php elseif ($isAuthMode): ?>
+          <a href="<?= e(url('/register.php')) ?>" class="btn btn-primary btn-small">Sign Up</a>
+          <a href="<?= e(url('/login.php')) ?>" class="btn btn-ghost btn-small">Login</a>
         <?php else: ?>
           <a href="<?= e(url('/login.php')) ?>" class="btn btn-secondary btn-small">Login</a>
           <a href="<?= e(url('/register.php')) ?>" class="btn btn-primary btn-small">Register</a>

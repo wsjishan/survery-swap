@@ -10,7 +10,7 @@ CREATE TABLE users (
   email VARCHAR(190) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
   role ENUM('user', 'admin') NOT NULL DEFAULT 'user',
-  points INT UNSIGNED NOT NULL DEFAULT 5,
+  points INT UNSIGNED NOT NULL DEFAULT 20,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
@@ -27,9 +27,7 @@ CREATE TABLE surveys (
   target_audience VARCHAR(150) NOT NULL DEFAULT 'General',
   estimated_minutes TINYINT UNSIGNED NULL,
   reward_points TINYINT UNSIGNED NOT NULL DEFAULT 1,
-  target_completions SMALLINT UNSIGNED NOT NULL DEFAULT 5,
-  current_completions SMALLINT UNSIGNED NOT NULL DEFAULT 0,
-  listing_fee TINYINT UNSIGNED NOT NULL DEFAULT 1,
+  listing_fee TINYINT UNSIGNED NOT NULL DEFAULT 0,
   total_budget INT UNSIGNED NOT NULL,
   remaining_budget INT UNSIGNED NOT NULL,
   status ENUM('pending', 'active', 'completed', 'rejected', 'paused') NOT NULL DEFAULT 'pending',
@@ -38,9 +36,7 @@ CREATE TABLE surveys (
   CONSTRAINT fk_surveys_user
     FOREIGN KEY (user_id) REFERENCES users(id)
     ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT chk_surveys_reward_tier CHECK (reward_points IN (1, 2, 3)),
-  CONSTRAINT chk_surveys_target_range CHECK (target_completions BETWEEN 5 AND 20),
-  CONSTRAINT chk_surveys_completion_cap CHECK (current_completions <= target_completions),
+  CONSTRAINT chk_surveys_reward_tier CHECK (reward_points IN (1, 2, 3, 4, 5)),
   CONSTRAINT chk_surveys_budget_non_negative CHECK (remaining_budget <= total_budget),
   INDEX idx_surveys_feed_sort (status, reward_points, created_at),
   INDEX idx_surveys_status_created (status, created_at),

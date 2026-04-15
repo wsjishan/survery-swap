@@ -206,28 +206,19 @@ function is_valid_reward_tier(int $rewardPoints): bool
     return in_array($rewardPoints, survey_reward_tiers(), true);
 }
 
-function is_valid_target_completions(int $targetCompletions): bool
-{
-    return $targetCompletions >= SURVEY_MIN_TARGET_COMPLETIONS
-        && $targetCompletions <= SURVEY_MAX_TARGET_COMPLETIONS;
-}
-
 function survey_listing_fee(): int
 {
     return SURVEY_LISTING_FEE;
 }
 
-function calculate_survey_total_cost(int $rewardPoints, int $targetCompletions): int
+function calculate_survey_reward_pool_points(int $rewardPoints): int
 {
-    return survey_listing_fee() + ($rewardPoints * $targetCompletions);
+    return $rewardPoints * SURVEY_REWARD_COST_MULTIPLIER;
 }
 
-function survey_remaining_slots(array $survey): int
+function calculate_survey_total_cost(int $rewardPoints): int
 {
-    $targetCompletions = (int) ($survey['target_completions'] ?? 0);
-    $currentCompletions = (int) ($survey['current_completions'] ?? 0);
-
-    return max(0, $targetCompletions - $currentCompletions);
+    return calculate_survey_reward_pool_points($rewardPoints);
 }
 
 function survey_source_type_legacy(): string

@@ -20,34 +20,34 @@ INSERT INTO users (id, name, email, password, role, points) VALUES
 
 INSERT INTO surveys (
   id, user_id, title, description, form_url, category, target_audience,
-  estimated_minutes, reward_points, target_completions, current_completions,
+  estimated_minutes, reward_points,
   listing_fee, total_budget, remaining_budget, status, created_at
 ) VALUES
   (1, 2, 'Social Media Usage and GPA',
    'Quick academic survey about social media usage patterns and GPA among university students.',
    'https://docs.google.com/forms/d/e/1FAIpQLSdA1-demo-social-media/viewform',
-   'Education', 'Undergraduate Students', 5, 3, 8, 3,
-   1, 25, 16, 'active', NOW() - INTERVAL 8 DAY),
+   'Education', 'Undergraduate Students', 5, 3,
+   0, 6, 6, 'active', NOW() - INTERVAL 8 DAY),
   (2, 3, 'Remote Learning Satisfaction Study',
    'Research survey focused on online learning quality, motivation, and satisfaction.',
    'https://docs.google.com/forms/d/e/1FAIpQLSdA1-demo-remote-learning/viewform',
-   'Education', 'College Students', 6, 2, 7, 2,
-   1, 15, 11, 'active', NOW() - INTERVAL 6 DAY),
+   'Education', 'College Students', 6, 2,
+   0, 4, 4, 'active', NOW() - INTERVAL 6 DAY),
   (3, 4, 'Campus Mental Health Awareness',
    'Survey exploring awareness and usage of mental health support services on campus.',
    'https://docs.google.com/forms/d/e/1FAIpQLSdA1-demo-mental-health/viewform',
-   'Psychology', 'University Students', 7, 1, 5, 0,
-   1, 6, 6, 'pending', NOW() - INTERVAL 2 DAY),
+   'Psychology', 'University Students', 7, 1,
+   0, 2, 2, 'pending', NOW() - INTERVAL 2 DAY),
   (4, 5, 'Food Habit and Sleep Pattern Analysis',
    'Academic questionnaire on food habits and their relationship with sleep quality.',
    'https://docs.google.com/forms/d/e/1FAIpQLSdA1-demo-food-sleep/viewform',
-   'Health', 'Young Adults', 8, 2, 6, 0,
-   1, 13, 13, 'active', NOW() - INTERVAL 1 DAY),
+   'Health', 'Young Adults', 8, 2,
+   0, 4, 4, 'active', NOW() - INTERVAL 1 DAY),
   (5, 1, 'Research Methods Confidence Poll',
    'Short poll for students to rate confidence in selecting and applying research methods.',
    'https://docs.google.com/forms/d/e/1FAIpQLSdA1-demo-research-methods/viewform',
-   'Research', 'Students and Researchers', 4, 1, 5, 1,
-   1, 6, 5, 'active', NOW() - INTERVAL 4 DAY);
+   'Research', 'Students and Researchers', 4, 1,
+   0, 2, 2, 'active', NOW() - INTERVAL 4 DAY);
 
 INSERT INTO survey_completions (id, survey_id, user_id, reward_given, completed_at) VALUES
   (1, 1, 3, 3, NOW() - INTERVAL 5 DAY),

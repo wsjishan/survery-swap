@@ -14,6 +14,11 @@ if ($viewer) {
 }
 
 $landingMode = true;
+$rewardTiers = survey_reward_tiers();
+$minRewardTier = min($rewardTiers);
+$maxRewardTier = max($rewardTiers);
+$minPublishCost = calculate_survey_total_cost($minRewardTier);
+$maxPublishCost = calculate_survey_total_cost($maxRewardTier);
 $pageTitle = 'Welcome';
 require_once __DIR__ . '/templates/header.php';
 ?>
@@ -39,9 +44,7 @@ require_once __DIR__ . '/templates/header.php';
 
     <nav class="main-nav" id="main-nav" data-main-nav aria-label="Landing navigation">
       <a class="nav-link" href="#how-it-works">How it Works</a>
-      <a class="nav-link" href="#pricing">Pricing</a>
-      <a class="nav-link" href="#blog">Blog</a>
-      <a class="nav-link" href="#faq">FAQ</a>
+      <a class="nav-link" href="<?= e(url('/faq.php')) ?>">FAQ</a>
     </nav>
 
     <div class="landing-nav-actions nav-actions">
@@ -56,16 +59,16 @@ require_once __DIR__ . '/templates/header.php';
     <div class="landing-hero-content">
       <p class="landing-kicker">Survey Exchange For Students And Researchers</p>
       <h1 class="landing-title">Get quality survey responses faster with a points-based swap.</h1>
-      <p class="landing-copy">Complete published surveys to earn points, then spend those points to publish your own in-app survey. No complex verification, and designed for real academic timelines.</p>
+      <p class="landing-copy">Complete published surveys to earn points, then spend those points to publish your own in-app survey. Reward tiers are 1 to 5 points, and publish cost is simply reward x <?= e((string) SURVEY_REWARD_COST_MULTIPLIER) ?>.</p>
 
       <ul class="landing-benefits" aria-label="Key SurveySwap benefits">
         <li class="landing-benefit-item">
           <span class="landing-benefit-icon" aria-hidden="true">1</span>
-          Complete surveys - earn points instantly
+          Complete surveys - earn +<?= e((string) $minRewardTier) ?> to +<?= e((string) $maxRewardTier) ?> points instantly
         </li>
         <li class="landing-benefit-item">
           <span class="landing-benefit-icon" aria-hidden="true">2</span>
-          Spend 1 point to publish your own survey
+          Publish cost is fixed by reward: 1->2, 3->6, 5->10
         </li>
         <li class="landing-benefit-item">
           <span class="landing-benefit-icon" aria-hidden="true">3</span>
@@ -96,11 +99,11 @@ require_once __DIR__ . '/templates/header.php';
         </div>
         <div class="landing-panel-stat">
           <dt>Per Completion</dt>
-          <dd>+<?= SURVEY_DEFAULT_REWARD_POINTS ?> point</dd>
+          <dd>+<?= e((string) $minRewardTier) ?> to +<?= e((string) $maxRewardTier) ?> points</dd>
         </div>
         <div class="landing-panel-stat">
           <dt>Publish Cost</dt>
-          <dd><?= SURVEY_SUBMIT_COST ?> point</dd>
+          <dd><?= e((string) $minPublishCost) ?> to <?= e((string) $maxPublishCost) ?> points</dd>
         </div>
       </dl>
     </aside>
@@ -118,12 +121,12 @@ require_once __DIR__ . '/templates/header.php';
     <article class="landing-step">
       <p class="landing-step-number">02</p>
       <h3 class="landing-step-title">Earn Points</h3>
-      <p class="landing-step-copy">Each completion gives +<?= SURVEY_DEFAULT_REWARD_POINTS ?> point, and every new user starts with <?= STARTER_POINTS ?> points.</p>
+      <p class="landing-step-copy">Each completion gives +<?= e((string) $minRewardTier) ?> to +<?= e((string) $maxRewardTier) ?> points, and every new user starts with <?= STARTER_POINTS ?> points.</p>
     </article>
     <article class="landing-step">
       <p class="landing-step-number">03</p>
       <h3 class="landing-step-title">Publish Your Survey</h3>
-      <p class="landing-step-copy">Spend <?= SURVEY_SUBMIT_COST ?> points to post your own survey and start collecting responses.</p>
+      <p class="landing-step-copy">Publish cost is simple: reward x <?= e((string) SURVEY_REWARD_COST_MULTIPLIER) ?>. Example: 1 becomes 2, 3 becomes 6, and 5 becomes 10.</p>
     </article>
   </div>
 </section>
@@ -131,15 +134,16 @@ require_once __DIR__ . '/templates/header.php';
 <section class="landing-info-grid" aria-label="More information">
   <article class="landing-info-card" id="pricing">
     <h2>Pricing</h2>
-    <p>Start free. Earn points by helping others, then spend points to publish your own survey when you are ready.</p>
+    <p>Simple rule: publish cost = reward x <?= e((string) SURVEY_REWARD_COST_MULTIPLIER) ?>. Current range is <?= e((string) $minPublishCost) ?> to <?= e((string) $maxPublishCost) ?> points.</p>
   </article>
   <article class="landing-info-card" id="blog">
-    <h2>Blog</h2>
-    <p>Learn practical tips for better survey design, faster response collection, and cleaner academic data.</p>
+    <h2>Guides</h2>
+    <p>Get simple guidance to write better questions, reach the right audience, and improve response quality.</p>
   </article>
-  <article class="landing-info-card" id="faq">
+  <article class="landing-info-card">
     <h2>FAQ</h2>
-    <p>Find quick answers about points, publication rules, and how to maximize response quality for your project.</p>
+    <p>Find quick answers about points, publication rules, and survey flow.</p>
+    <p><a href="<?= e(url('/faq.php')) ?>">Read the full FAQ</a></p>
   </article>
 </section>
 <?php require_once __DIR__ . '/templates/footer.php'; ?>

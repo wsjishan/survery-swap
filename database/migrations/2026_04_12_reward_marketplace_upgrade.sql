@@ -2,9 +2,9 @@ USE surveyswap;
 
 START TRANSACTION;
 
--- 1) Users: starter balance default becomes 5.
+-- 1) Users: starter balance default becomes 20.
 ALTER TABLE users
-  MODIFY points INT UNSIGNED NOT NULL DEFAULT 5;
+  MODIFY points INT UNSIGNED NOT NULL DEFAULT 20;
 
 -- 2) Surveys: add campaign budgeting fields.
 ALTER TABLE surveys

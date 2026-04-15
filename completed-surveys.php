@@ -9,7 +9,7 @@ $user = current_user();
 $pdo = db();
 
 $stmt = $pdo->prepare(
-    'SELECT s.id, s.title, s.reward_points, sc.completed_at
+    'SELECT s.id, s.title, sc.reward_given, sc.completed_at
      FROM survey_completions sc
      INNER JOIN surveys s ON s.id = sc.survey_id
      WHERE sc.user_id = :user_id
@@ -22,7 +22,7 @@ $totalCompleted = count($completions);
 $totalEarned = 0;
 
 foreach ($completions as $completion) {
-  $totalEarned += (int) ($completion['reward_points'] ?? 0);
+  $totalEarned += (int) ($completion['reward_given'] ?? 0);
 }
 
 $pageTitle = 'Completed Surveys';
@@ -58,7 +58,7 @@ require_once __DIR__ . '/templates/header.php';
           <?php foreach ($completions as $completion): ?>
             <tr>
               <td class="records-title-cell"><?= e($completion['title']) ?></td>
-              <td><span class="records-reward">+<?= e((string) $completion['reward_points']) ?> point(s)</span></td>
+              <td><span class="records-reward">+<?= e((string) $completion['reward_given']) ?> point(s)</span></td>
               <td><?= e(date('M j, Y g:i A', strtotime($completion['completed_at']))) ?></td>
               <td><a href="<?= e(url('/survey-details.php?id=' . $completion['id'])) ?>" class="btn btn-secondary btn-small">View</a></td>
             </tr>

@@ -28,10 +28,8 @@ $category = trim((string) ($_POST['category'] ?? ''));
 $targetAudience = trim((string) ($_POST['target_audience'] ?? 'General'));
 $estimatedMinutesRaw = trim((string) ($_POST['estimated_minutes'] ?? ''));
 $rewardPointsRaw = trim((string) ($_POST['reward_points'] ?? ''));
-$targetCompletionsRaw = trim((string) ($_POST['target_completions'] ?? ''));
 $estimatedMinutes = null;
 $rewardPoints = 0;
-$targetCompletions = 0;
 $allowedCategories = survey_categories();
 
 $errors = [];
@@ -69,26 +67,15 @@ if ($message = validate_positive_int($rewardPointsRaw, 'Reward per completion'))
 } else {
     $rewardPoints = (int) $rewardPointsRaw;
     if (!is_valid_reward_tier($rewardPoints)) {
-        $errors['reward_points'] = 'Reward tier must be 1, 2, or 3 points.';
-    }
-}
-
-if ($message = validate_positive_int($targetCompletionsRaw, 'Target completions')) {
-    $errors['target_completions'] = $message;
-} else {
-    $targetCompletions = (int) $targetCompletionsRaw;
-    if (!is_valid_target_completions($targetCompletions)) {
-        $errors['target_completions'] = sprintf(
-            'Target completions must be between %d and %d.',
-            SURVEY_MIN_TARGET_COMPLETIONS,
-            SURVEY_MAX_TARGET_COMPLETIONS
-        );
+        $errors['reward_points'] = 'Reward tier must be between 1 and 5 points.';
     }
 }
 
 $totalCost = 0;
+$rewardPool = 0;
 if (!$errors) {
-    $totalCost = calculate_survey_total_cost($rewardPoints, $targetCompletions);
+    $rewardPool = calculate_survey_reward_pool_points($rewardPoints);
+    $totalCost = calculate_survey_total_cost($rewardPoints);
 }
 
 if (!$errors && (int) $user['points'] < $totalCost) {
@@ -110,7 +97,6 @@ if ($errors) {
         'target_audience' => $targetAudience,
         'estimated_minutes' => $estimatedMinutesRaw,
         'reward_points' => $rewardPointsRaw,
-        'target_completions' => $targetCompletionsRaw,
     ]);
     if (isset($errors['points'])) {
         set_flash('warning', $errors['points']);
@@ -139,12 +125,10 @@ try {
     $insertSurvey = $pdo->prepare(
         'INSERT INTO surveys (
             user_id, source_type, title, description, form_url, survey_schema_json, category, target_audience,
-            estimated_minutes, reward_points, target_completions, current_completions,
-            listing_fee, total_budget, remaining_budget, status
+            estimated_minutes, reward_points, listing_fee, total_budget, remaining_budget, status
          ) VALUES (
             :user_id, :source_type, :title, :description, :form_url, :survey_schema_json, :category, :target_audience,
-            :estimated_minutes, :reward_points, :target_completions, :current_completions,
-            :listing_fee, :total_budget, :remaining_budget, :status
+            :estimated_minutes, :reward_points, :listing_fee, :total_budget, :remaining_budget, :status
          )'
     );
 
@@ -168,11 +152,9 @@ try {
         'target_audience' => $targetAudience,
         'estimated_minutes' => $estimatedMinutes,
         'reward_points' => $rewardPoints,
-        'target_completions' => $targetCompletions,
-        'current_completions' => 0,
         'listing_fee' => $listingFee,
         'total_budget' => $totalCost,
-        'remaining_budget' => $totalCost,
+        'remaining_budget' => $rewardPool,
         'status' => $surveyStatus,
     ]);
 
@@ -214,7 +196,6 @@ try {
         'target_audience' => $targetAudience,
         'estimated_minutes' => $estimatedMinutesRaw,
         'reward_points' => $rewardPointsRaw,
-        'target_completions' => $targetCompletionsRaw,
     ]);
     set_flash('danger', db_user_error_message($e));
     redirect('/submit-survey.php');

@@ -30,8 +30,7 @@ try {
     $pdo->beginTransaction();
 
     $surveyStmt = $pdo->prepare(
-        'SELECT id, user_id, source_type, survey_schema_json, status, reward_points,
-            target_completions, current_completions, remaining_budget
+        'SELECT id, user_id, source_type, survey_schema_json, status, reward_points, remaining_budget
          FROM surveys
          WHERE id = :id
          LIMIT 1
@@ -52,7 +51,8 @@ try {
         redirect('/survey-details.php?id=' . $surveyId);
     }
 
-    if ((int) $survey['user_id'] === $userId) {
+    $isOwnSurvey = (int) $survey['user_id'] === $userId;
+    if ($isOwnSurvey && !is_admin()) {
         $pdo->rollBack();
         set_flash('warning', 'You cannot complete your own survey.');
         redirect('/survey-details.php?id=' . $surveyId);
@@ -81,20 +81,26 @@ try {
         redirect('/survey-details.php?id=' . $surveyId);
     }
 
-    $rewardPoints = max(1, (int) $survey['reward_points']);
-    $targetCompletions = (int) $survey['target_completions'];
-    $currentCompletions = (int) $survey['current_completions'];
-    $remainingBudget = (int) $survey['remaining_budget'];
-
-    if ($currentCompletions >= $targetCompletions) {
+    $rewardPoints = (int) ($survey['reward_points'] ?? 0);
+    if (!is_valid_reward_tier($rewardPoints)) {
         $pdo->rollBack();
-        set_flash('info', 'This survey campaign already reached its target completions.');
+        set_flash('danger', 'This survey has an invalid reward configuration.');
         redirect('/survey-details.php?id=' . $surveyId);
     }
 
+    $remainingBudget = (int) ($survey['remaining_budget'] ?? 0);
     if ($remainingBudget < $rewardPoints) {
-        $pdo->rollBack();
-        set_flash('warning', 'This survey campaign has insufficient remaining budget.');
+        $pauseStmt = $pdo->prepare(
+            'UPDATE surveys
+             SET status = :paused
+             WHERE id = :id'
+        );
+        $pauseStmt->execute([
+            'paused' => SURVEY_STATUS_PAUSED,
+            'id' => $surveyId,
+        ]);
+        $pdo->commit();
+        set_flash('warning', 'This survey has run out of reward budget and is now paused.');
         redirect('/survey-details.php?id=' . $surveyId);
     }
 
@@ -187,30 +193,26 @@ try {
         throw new RuntimeException('Could not award completion points.');
     }
 
-    $newCurrentCompletions = $currentCompletions + 1;
     $newRemainingBudget = max(0, $remainingBudget - $rewardPoints);
-    $newStatus = $newCurrentCompletions >= $targetCompletions
-        ? SURVEY_STATUS_COMPLETED
+    $newStatus = $newRemainingBudget < $rewardPoints
+        ? SURVEY_STATUS_PAUSED
         : SURVEY_STATUS_ACTIVE;
 
     $updateSurvey = $pdo->prepare(
         'UPDATE surveys
-         SET current_completions = :current_completions,
-             remaining_budget = :remaining_budget,
+         SET remaining_budget = :remaining_budget,
              status = :status
          WHERE id = :id'
     );
     $updateSurvey->execute([
-        'current_completions' => $newCurrentCompletions,
         'remaining_budget' => $newRemainingBudget,
         'status' => $newStatus,
         'id' => $surveyId,
     ]);
 
     $pdo->commit();
-
-    if ($newStatus === SURVEY_STATUS_COMPLETED) {
-        set_flash('success', sprintf('Response submitted. You earned +%d points and this campaign is now completed.', $rewardPoints));
+    if ($newStatus === SURVEY_STATUS_PAUSED) {
+        set_flash('success', sprintf('Response submitted. You earned +%d points. This survey is now paused (budget exhausted).', $rewardPoints));
     } else {
         set_flash('success', sprintf('Response submitted. You earned +%d points.', $rewardPoints));
     }

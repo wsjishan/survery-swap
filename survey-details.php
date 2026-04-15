@@ -30,7 +30,9 @@ if (!$survey) {
 }
 
 $isOwner = (int) $survey['user_id'] === (int) $user['id'];
-$isAllowedByStatus = $survey['status'] === SURVEY_STATUS_APPROVED || $isOwner || is_admin();
+$isAdmin = is_admin();
+$canCompleteOwnSurvey = $isOwner && $isAdmin;
+$isAllowedByStatus = $survey['status'] === SURVEY_STATUS_APPROVED || $isOwner || $isAdmin;
 
 if (!$isAllowedByStatus) {
     set_flash('danger', 'You are not allowed to view this survey.');
@@ -48,10 +50,43 @@ $stmtCompleted->execute([
     'user_id' => $user['id'],
 ]);
 $alreadyCompleted = (bool) $stmtCompleted->fetchColumn();
+$submittedAnswersByIndex = [];
+$hasSubmittedNativeResponse = false;
 
-$canComplete = !$isOwner
-    && !$alreadyCompleted
-    && $survey['status'] === SURVEY_STATUS_APPROVED;
+if ($alreadyCompleted) {
+    $nativeResponseStmt = $pdo->prepare(
+        'SELECT answers_json
+         FROM survey_native_responses
+         WHERE survey_id = :survey_id AND user_id = :user_id
+         LIMIT 1'
+    );
+    $nativeResponseStmt->execute([
+        'survey_id' => $surveyId,
+        'user_id' => $user['id'],
+    ]);
+    $answersJson = $nativeResponseStmt->fetchColumn();
+
+    if (is_string($answersJson) && $answersJson !== '') {
+        $decodedAnswers = json_decode($answersJson, true);
+        if (is_array($decodedAnswers)) {
+            foreach ($decodedAnswers as $idx => $entry) {
+                if (!is_array($entry)) {
+                    continue;
+                }
+
+                $questionIndex = isset($entry['question_index']) && is_numeric($entry['question_index'])
+                    ? (int) $entry['question_index']
+                    : (int) $idx;
+                $submittedAnswersByIndex[$questionIndex] = trim((string) ($entry['answer'] ?? ''));
+            }
+            $hasSubmittedNativeResponse = $submittedAnswersByIndex !== [];
+        }
+    }
+}
+
+$canComplete = !$alreadyCompleted
+    && $survey['status'] === SURVEY_STATUS_APPROVED
+    && (!$isOwner || $canCompleteOwnSurvey);
 
 $status = (string) $survey['status'];
 $statusClass = match ($status) {
@@ -108,6 +143,7 @@ require_once __DIR__ . '/templates/header.php';
             <?php
             $questionType = (string) ($question['type'] ?? native_question_type_short_text());
             $questionOptions = $question['options'] ?? [];
+            $submittedAnswer = (string) ($submittedAnswersByIndex[$index] ?? '');
             ?>
             <div class="field survey-question-card">
               <label class="field-label">
@@ -123,6 +159,7 @@ require_once __DIR__ . '/templates/header.php';
                         name="answers[<?= e((string) $index) ?>]"
                         type="radio"
                         value="<?= e((string) $optionText) ?>"
+                        <?= $submittedAnswer !== '' && $submittedAnswer === (string) $optionText ? 'checked' : '' ?>
                         <?= $canComplete ? 'required' : 'disabled' ?>
                       >
                       <?= e((string) $optionText) ?>
@@ -136,6 +173,7 @@ require_once __DIR__ . '/templates/header.php';
                   type="text"
                   class="input"
                   maxlength="2000"
+                  value="<?= e($submittedAnswer) ?>"
                   <?= $canComplete ? 'required' : 'disabled' ?>
                 >
               <?php endif; ?>
@@ -148,6 +186,8 @@ require_once __DIR__ . '/templates/header.php';
 
           <?php if ($canComplete): ?>
             <p class="muted small">You can submit only once for this survey. Make sure your answers are final.</p>
+          <?php elseif ($alreadyCompleted && $hasSubmittedNativeResponse): ?>
+            <p class="muted small">Your submitted answers are shown above in read-only mode.</p>
           <?php endif; ?>
         </form>
       <?php endif; ?>
@@ -164,8 +204,10 @@ require_once __DIR__ . '/templates/header.php';
     </div>
   <?php endif; ?>
 
-  <?php if ($isOwner): ?>
+  <?php if ($isOwner && !$isAdmin): ?>
     <p class="muted small">You cannot earn points from your own survey.</p>
+  <?php elseif ($isOwner && $isAdmin): ?>
+    <p class="muted small">Admin override enabled: you can complete your own survey once.</p>
   <?php elseif ($alreadyCompleted): ?>
     <p class="muted small">You already completed this survey.</p>
   <?php elseif ($survey['status'] !== SURVEY_STATUS_APPROVED): ?>

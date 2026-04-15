@@ -11,9 +11,9 @@ $authMode = true;
 $pageTitle = 'Login';
 require_once __DIR__ . '/templates/header.php';
 ?>
-<section class="section auth-shell card card-pad">
+<section class="section auth-shell auth-shell-single card card-pad">
   <header class="page-head">
-    <p class="auth-brand">SurveySwap</p>
+    <p class="auth-brand">Sign in</p>
     <h1 class="page-title">Welcome back</h1>
     <p class="page-subtitle">Log in to continue exchanging surveys.</p>
   </header>

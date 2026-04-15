@@ -8,14 +8,13 @@ load_env_file(dirname(__DIR__) . '/.env');
 
 const APP_NAME = 'SurveySwap';
 
-const STARTER_POINTS = 5;
+const STARTER_POINTS = 20;
 
-const SURVEY_REWARD_TIERS = [1, 2, 3];
+const SURVEY_REWARD_TIERS = [1, 2, 3, 4, 5];
 const SURVEY_DEFAULT_REWARD_POINTS = 1;
-const SURVEY_MIN_TARGET_COMPLETIONS = 5;
-const SURVEY_MAX_TARGET_COMPLETIONS = 20;
+const SURVEY_REWARD_COST_MULTIPLIER = 2;
 
-const SURVEY_LISTING_FEE = 1;
+const SURVEY_LISTING_FEE = 0;
 const SURVEY_SUBMIT_COST = SURVEY_LISTING_FEE;
 const SURVEY_REQUIRES_MODERATION = true;
 
@@ -34,6 +33,7 @@ const TX_TYPE_DEBIT = 'debit';
 const TX_REASON_STARTER = 'starter_bonus';
 const TX_REASON_COMPLETION = 'survey_completion_reward';
 const TX_REASON_SURVEY_PUBLISH = 'survey_publish_budget';
+const TX_REASON_SURVEY_REJECT_REFUND = 'survey_rejection_refund';
 const TX_REASON_SUBMISSION = TX_REASON_SURVEY_PUBLISH;
 const TX_REASON_ADMIN_ADJUSTMENT = 'admin_adjustment';
 
